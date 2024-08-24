@@ -325,6 +325,7 @@ class Controller:
                         print(f"{generateTitle}已存在，跳过")
                         continue
 
+
                     videoUrl = f'https://www.bilibili.com/video/{BVnumber}'
 
                     print(f"开始下载：{generateTitle}")
