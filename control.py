@@ -105,6 +105,7 @@ def sanitizeFilename(filename: str) -> str:
             first = first.replace(i, '_')
     return first
 
+
 def thread_it(func, *args):
     t = threading.Thread(target=func, args=args)
     t.daemon = True
@@ -117,7 +118,7 @@ class Controller:
 
     def __init__(self):
         self.rootPath = os.path.dirname(os.path.abspath(__file__))
-        self.videoPath: str = self.rootPath + '\\Videos' #保存所有视频的文件夹
+        self.videoPath: str = self.rootPath + '\\Videos'  #保存所有视频的文件夹
         self.articlePath = self.rootPath + '\\Articles'
         if not os.path.exists(self.videoPath):
             os.makedirs(self.videoPath)
@@ -133,11 +134,8 @@ class Controller:
         self.cookiesPath = self.getCookiesPath()
         self.ui.protocol("WM_DELETE_WINDOW", self.closeAction)
 
-
-
     def addConfigUIFunction_WarnningAlert(self):
         pass
-
 
     # 获取cookies路径
     def getCookiesPath(self):
@@ -193,7 +191,6 @@ class Controller:
 
         return links
 
-
     def initClipboard(self):
         win32clipboard.OpenClipboard()
         win32clipboard.SetClipboardData(win32con.CF_UNICODETEXT, 'init')
@@ -216,7 +213,6 @@ class Controller:
         data = win32clipboard.GetClipboardData()
         win32clipboard.CloseClipboard()
         return data
-
 
     def monitorClipboard(self):
         """
@@ -290,7 +286,6 @@ class Controller:
         # self.ui.tk_table_sheet.configure(state=DISABLED)
         self.ui.tk_table_sheet.configure(selectmode='none')
 
-
         allLinksList = self.getAllDownloadLinks()
         if not allLinksList:
             thread_it(win32api.MessageBox, 0, "表中无数据，请先添加数据", '错误', win32con.MB_ICONWARNING)
@@ -312,10 +307,10 @@ class Controller:
         """
         print("开始下载\n")
         for i in allLinksList:
-            generateTitle = sanitize_filename(i[0][0])
+            generateTitle = sanitize_filename(i[0][0])  #对标题进行处理，去除特殊字符
             if 'BV' in i[0][1]:
                 BVnumber = i[0][1]
-                saveVideoFolderPath = os.path.join(self.videoPath, generateTitle) #视频保存的文件夹
+                saveVideoFolderPath = os.path.join(self.videoPath, generateTitle)  #视频保存的文件夹
 
                 if not os.path.exists(saveVideoFolderPath):
                     os.makedirs(saveVideoFolderPath)
@@ -347,7 +342,7 @@ class Controller:
                     # 多p视频
                     subtitlePnumberList = i[1]
                     for n in subtitlePnumberList:
-                        subtitle, Pnumber = sanitizeFilename(n[0]), n[1]
+                        subtitle, Pnumber = sanitizeFilename(n[0]), n[1]  #对副标题进行处理，去除特殊字符
                         if os.path.exists(os.path.join(saveVideoFolderPath, f'{subtitle}.mp4')):
                             print(f"{subtitle}.mp4已存在，跳过")
                             continue
@@ -365,7 +360,7 @@ class Controller:
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
                             shell=True)
-                        info=proc.communicate()
+                        info = proc.communicate()
                         outinfo, errinfo = info[0].decode('utf-8'), info[1].decode('utf-8')  # 获取错误信息
                         if os.path.exists(os.path.join(saveVideoFolderPath, f'{subtitle}.mp4')):
                             print(f"{generateTitle}下的副标题为{subtitle}的视频下载完成")
