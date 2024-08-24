@@ -1,0 +1,24 @@
+# 使用 you-get -i url时的不同视频（单p或多p）的输出内容和错误信息
+# 单p视频输出：
+# （没有错误信息）
+# title:               【巨人】伪电影预告 玛利亚之墙夺回战
+# （title后即为视频标题）
+#
+# 表格中加入    标题    |    BV号
+#
+# 多p视频的错误信息和输出：
+# 错误信息：
+# you-get: This is a multipart video. (use --playlist to download all parts.)
+
+# 此时使用you-get -i --playlist url的输出：
+
+# title:               進撃の巨人 CG短片 by:Masashi Imagawa (P1. Attack on titan 進撃の巨人)
+#……
+# title:               進撃の巨人 CG短片 by:Masashi Imagawa (P2. vfx breakdown01)
+# ……
+# （括号前的为视频标题，括号内的为分P标题）获取视频标题、分p标题和分p数量
+# 表格内先加入     视频标题  |   视频bV号       然后在该节点下加入   分p标题
+# 再在该节点下加入   分p标题   |   P__
+
+
+# 即使是单p视频也可以通过you-get --playlist url 下载。因此统一一用--playlist下载
