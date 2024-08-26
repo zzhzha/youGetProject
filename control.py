@@ -125,6 +125,8 @@ class Controller:
         self.rootPath = os.path.dirname(os.path.abspath(__file__))
         self.videoPath: str = self.rootPath + '\\Videos'  #保存所有视频的文件夹
         self.articlePath = self.rootPath + '\\Articles'
+        self.videoConfirms_threads = []
+
         if not os.path.exists(self.videoPath):
             os.makedirs(self.videoPath)
         if not os.path.exists(self.articlePath):
@@ -138,6 +140,19 @@ class Controller:
         self.s = requests.Session()
         self.cookiesPath = self.getCookiesPath()
         self.ui.protocol("WM_DELETE_WINDOW", self.closeAction)
+
+    def monitor_viedoConfirms_threads(self):
+        """
+        监控调用viedoConfirm方法的所有线程，持续检索所有线程的is_alive状态，
+        若都为False，则允许点击开始下载按钮，若其中一个状态为True，则禁止点击开始下载按钮
+        """
+        while True:
+            if all(not t.is_alive() for t in self.videoConfirms_threads):
+                self.ui.start_download_button.config(state='normal')
+            else:
+                self.ui.start_download_button.config(state='disabled')
+            time.sleep(1)
+
 
     def addConfigUIFunction_WarnningAlert(self):
         pass
