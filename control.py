@@ -391,14 +391,14 @@ class Controller:
                     # outinfo, errinfo = info[0].decode('utf-8'), info[1].decode('utf-8')  # 获取错误信息
                 # print(f'{generateTitle}专栏下的图片全部下载完成')
 
-        print("下载完成")
+        # print("下载完成")
 
         self.ui.tk_button_beginButton.configure(state=NORMAL)
         # treeveiw没有state属性
         # self.ui.tk_frame_sheet.configure(state=NORMAL)
         self.ui.tk_table_sheet.configure(selectmode='extended')
         # 此处还有问题，需要确认所有线程都执行完毕后再重新设置剪贴板监听
-        kb.add_hotkey('Ctrl + C', lambda: threading.Thread(target=self.ctl.manageCopy, daemon=True).start())
+        kb.add_hotkey('Ctrl + C', lambda: threading.Thread(target=self.manageCopy, daemon=True).start())
         # kb.add_hotkey('Ctrl + C', self.manageCopy)
         # 开始下载   下载完成后，调用win32api.MessageBox方法弹出提示框
         time.sleep(0.05)
