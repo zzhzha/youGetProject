@@ -331,7 +331,7 @@ class Controller:
                     videoUrl = f'https://www.bilibili.com/video/{BVnumber}'
 
                     print(f"开始下载：{generateTitle}")
-                    command = f'you-get -o "{saveVideoFolderPath}" -O "{generateTitle}" {videoUrl} -c {self.cookiesPath}'
+                    command = f'you-get --skip-existing-file-size-check -o "{saveVideoFolderPath}" -O "{generateTitle}" {videoUrl} -c {self.cookiesPath}'
                     thread_it(os.system, command)
                     # thread_it(run_cmd_print_tips, command, f"标题为：{generateTitle} 的视频下载完成")
                 #     proc = subprocess.Popen(
@@ -377,7 +377,8 @@ class Controller:
                     os.makedirs(saveImagesFolderPath)
                 print(f"开始下载{generateTitle}专栏下的图片")
                 for imageUrl in i[1]:
-                    command = f'you-get {imageUrl} --output-dir "{saveImagesFolderPath}" -O "{i[1].index(imageUrl)}" -c {self.cookiesPath}'
+                    command = f'you-get {imageUrl} --skip-existing-file-size-check --output-dir "{saveImagesFolderPath}" -O "{i[1].index(imageUrl)+1}" -c {self.cookiesPath}'
+                    # command = f'you-get {imageUrl} --output-dir "{saveImagesFolderPath}" -c {self.cookiesPath}'
                     thread_it(os.system, command)
                     time.sleep(0.1)
                     # thread_it(run_cmd_print_tips, command, f"标题为：{generateTitle} 的图片下载完成")
