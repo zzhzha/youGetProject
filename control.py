@@ -53,6 +53,10 @@ import configparser
 # user32 = ctypes.windll.user32
 # user = ctypes.windll.LoadLibrary('C:\\Windows\\System32\\user32.dll')
 
+
+def run_cmd_print_tips(cmd,tips):
+    os.system(cmd)
+    print(tips)
 def getHeaders(refererUrl):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
@@ -110,6 +114,9 @@ def thread_it(func, *args):
     t = threading.Thread(target=func, args=args)
     t.daemon = True
     t.start()
+    # t.join()
+    # if sth:
+    #     print(sth)
 
 
 class Controller:
@@ -158,7 +165,7 @@ class Controller:
             if not self.ui.tk_table_sheet.get_children(i):
                 # 如果子节点没有子节点，说明为单个视频，则获取标题和BV号
                 # [('title','BV1234567890')]
-                print(self.ui.tk_table_sheet.item(i)['values'])
+                # print(self.ui.tk_table_sheet.item(i)['values'])
                 videoItem = [(title, link)]
                 links.append(videoItem)
 
@@ -305,7 +312,6 @@ class Controller:
         """
         开始下载
         """
-        print("开始下载\n")
         for i in allLinksList:
             generateTitle = sanitize_filename(i[0][0])  #对标题进行处理，去除特殊字符
             if 'BV' in i[0][1]:
@@ -325,48 +331,49 @@ class Controller:
                         print(f"{generateTitle}已存在，跳过")
                         continue
 
-
                     videoUrl = f'https://www.bilibili.com/video/{BVnumber}'
 
                     print(f"开始下载：{generateTitle}")
                     command = f'you-get -o "{saveVideoFolderPath}" -O "{generateTitle}.mp4" {videoUrl} -c {self.cookiesPath}'
-                    proc = subprocess.Popen(
-                        command,
-                        stdin=None,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        shell=True)
-                    info = proc.communicate()
-                    outinfo, errinfo = info[0].decode('utf-8'), info[1].decode('utf-8')  # 获取错误信息
-                    print(f"标题为：{generateTitle} 的视频下载完成")
-                else:
-                    # 多p视频
-                    subtitlePnumberList = i[1]
-                    for n in subtitlePnumberList:
-                        subtitle, Pnumber = sanitizeFilename(n[0]), n[1]  #对副标题进行处理，去除特殊字符
-                        if os.path.exists(os.path.join(saveVideoFolderPath, f'{subtitle}.mp4')):
-                            print(f"{subtitle}.mp4已存在，跳过")
-                            continue
-
-                        videoUrl = f'https://www.bilibili.com/video/{BVnumber}?p={Pnumber[1:]}'
-
-                        print(f"开始下载{generateTitle}下的副标题为{subtitle}的视频")
-                        # command = f'you-get {videoUrl} -c {cookiesPath}'
-
-                        command = f'you-get -o "{saveVideoFolderPath}" -O "{subtitle}.mp4" {videoUrl} -c {self.cookiesPath}'
-                        print(command)
-                        proc = subprocess.Popen(
-                            command,
-                            stdin=None,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE,
-                            shell=True)
-                        info = proc.communicate()
-                        outinfo, errinfo = info[0].decode('utf-8'), info[1].decode('utf-8')  # 获取错误信息
-                        if os.path.exists(os.path.join(saveVideoFolderPath, f'{subtitle}.mp4')):
-                            print(f"{generateTitle}下的副标题为{subtitle}的视频下载完成")
-                        else:
-                            print(f"{generateTitle}下的副标题为{subtitle}的视频下载失败")
+                    thread_it(os.system, command)
+                    # thread_it(run_cmd_print_tips, command, f"标题为：{generateTitle} 的视频下载完成")
+                #     proc = subprocess.Popen(
+                #         command,
+                #         stdin=None,
+                #         stdout=subprocess.PIPE,
+                #         stderr=subprocess.PIPE,
+                #         shell=True)
+                #     info = proc.communicate()
+                #     outinfo, errinfo = info[0].decode('utf-8'), info[1].decode('utf-8')  # 获取错误信息
+                #     print(f"标题为：{generateTitle} 的视频下载完成")
+                # else:
+                #     # 多p视频
+                #     subtitlePnumberList = i[1]
+                #     for n in subtitlePnumberList:
+                #         subtitle, Pnumber = sanitizeFilename(n[0]), n[1]  #对副标题进行处理，去除特殊字符
+                #         if os.path.exists(os.path.join(saveVideoFolderPath, f'{subtitle}.mp4')):
+                #             print(f"{subtitle}.mp4已存在，跳过")
+                #             continue
+                #
+                #         videoUrl = f'https://www.bilibili.com/video/{BVnumber}?p={Pnumber[1:]}'
+                #
+                #         print(f"开始下载{generateTitle}下的副标题为{subtitle}的视频")
+                #         # command = f'you-get {videoUrl} -c {cookiesPath}'
+                #
+                #         command = f'you-get -o "{saveVideoFolderPath}" -O "{subtitle}.mp4" {videoUrl} -c {self.cookiesPath}'
+                #         print(command)
+                #         proc = subprocess.Popen(
+                #             command,
+                #             stdin=None,
+                #             stdout=subprocess.PIPE,
+                #             stderr=subprocess.PIPE,
+                #             shell=True)
+                #         info = proc.communicate()
+                #         outinfo, errinfo = info[0].decode('utf-8'), info[1].decode('utf-8')  # 获取错误信息
+                #         if os.path.exists(os.path.join(saveVideoFolderPath, f'{subtitle}.mp4')):
+                #             print(f"{generateTitle}下的副标题为{subtitle}的视频下载完成")
+                #         else:
+                #             print(f"{generateTitle}下的副标题为{subtitle}的视频下载失败")
             else:
                 saveImagesFolderPath = os.path.join(self.articlePath, generateTitle)
                 if not os.path.exists(saveImagesFolderPath):
@@ -374,15 +381,17 @@ class Controller:
                 print(f"开始下载{generateTitle}专栏下的图片")
                 for imageUrl in i[1]:
                     command = f'you-get {imageUrl} --output-dir "{saveImagesFolderPath}" -c {self.cookiesPath}'
-                    proc = subprocess.Popen(
-                        command,  # cmd特定的查询空间的命令
-                        stdin=None,  # 标准输入 键盘
-                        stdout=subprocess.PIPE,  # -1 标准输出（演示器、终端) 保存到管道中以便进行操作
-                        stderr=subprocess.PIPE,  # 标准错误，保存到管道
-                        shell=True)
-                    info = proc.communicate()
-                    outinfo, errinfo = info[0].decode('utf-8'), info[1].decode('utf-8')  # 获取错误信息
-                print(f'{generateTitle}专栏下的图片全部下载完成')
+                    thread_it(os.system, command)
+                    # thread_it(run_cmd_print_tips, command, f"标题为：{generateTitle} 的图片下载完成")
+                    # proc = subprocess.Popen(
+                    #     command,  # cmd特定的查询空间的命令
+                    #     stdin=None,  # 标准输入 键盘
+                    #     stdout=subprocess.PIPE,  # -1 标准输出（演示器、终端) 保存到管道中以便进行操作
+                    #     stderr=subprocess.PIPE,  # 标准错误，保存到管道
+                    #     shell=True)
+                    # info = proc.communicate()
+                    # outinfo, errinfo = info[0].decode('utf-8'), info[1].decode('utf-8')  # 获取错误信息
+                # print(f'{generateTitle}专栏下的图片全部下载完成')
 
         print("下载完成")
 
@@ -427,7 +436,7 @@ class Controller:
                 thread_it(self.setWarnningWindowTop)
 
         else:
-            thread_it(win32api.MessageBox, 0, "复制格式错误，请重新复制", '错误', win32con.MB_ICONWARNING)
+            thread_it(win32api.MessageBox, 0, "复制格式错误，请重新复制", '错误', win32con.MB_ICONWARNING,)
             thread_it(self.setWarnningWindowTop)
 
     # 获取视频错误信息和输出信息
