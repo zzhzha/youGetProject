@@ -320,7 +320,7 @@ class Controller:
 
                 if len(i) == 1:
                     # 单个视频
-                    videoPath = os.path.join(saveVideoFolderPath, f'{generateTitle}.mp4')
+                    videoPath = os.path.join(saveVideoFolderPath, f'{generateTitle}')
                     print(videoPath)
                     # 以视频标题为文件夹名，创建视频保存的文件夹
                     if os.path.exists(videoPath):
@@ -331,7 +331,7 @@ class Controller:
                     videoUrl = f'https://www.bilibili.com/video/{BVnumber}'
 
                     print(f"开始下载：{generateTitle}")
-                    command = f'you-get -o "{saveVideoFolderPath}" -O "{generateTitle}.mp4" {videoUrl} -c {self.cookiesPath}'
+                    command = f'you-get -o "{saveVideoFolderPath}" -O "{generateTitle}" {videoUrl} -c {self.cookiesPath}'
                     thread_it(os.system, command)
                     # thread_it(run_cmd_print_tips, command, f"标题为：{generateTitle} 的视频下载完成")
                 #     proc = subprocess.Popen(
@@ -377,8 +377,9 @@ class Controller:
                     os.makedirs(saveImagesFolderPath)
                 print(f"开始下载{generateTitle}专栏下的图片")
                 for imageUrl in i[1]:
-                    command = f'you-get {imageUrl} --output-dir "{saveImagesFolderPath}" -c {self.cookiesPath}'
+                    command = f'you-get {imageUrl} --output-dir "{saveImagesFolderPath}" -O "{i[1].index(imageUrl)}" -c {self.cookiesPath}'
                     thread_it(os.system, command)
+                    time.sleep(0.1)
                     # thread_it(run_cmd_print_tips, command, f"标题为：{generateTitle} 的图片下载完成")
                     # proc = subprocess.Popen(
                     #     command,  # cmd特定的查询空间的命令
@@ -396,7 +397,9 @@ class Controller:
         # treeveiw没有state属性
         # self.ui.tk_frame_sheet.configure(state=NORMAL)
         self.ui.tk_table_sheet.configure(selectmode='extended')
-        kb.add_hotkey('Ctrl + C', self.manageCopy)
+        # 此处还有问题，需要确认所有线程都执行完毕后再重新设置剪贴板监听
+        kb.add_hotkey('Ctrl + C', lambda: threading.Thread(target=self.ctl.manageCopy, daemon=True).start())
+        # kb.add_hotkey('Ctrl + C', self.manageCopy)
         # 开始下载   下载完成后，调用win32api.MessageBox方法弹出提示框
         time.sleep(0.05)
 
@@ -438,6 +441,9 @@ class Controller:
 
     # 获取视频错误信息和输出信息
     def getVideoInfo(self, url, multipart=False):
+        # 可能是唯一且必须要阻塞线程以获取输出和错误信息的方法
+        # 因为you-get的输出和错误信息都在终端中，而终端的输出和错误信息是通过管道获取的，
+        # 所以需要通过阻塞获取输出和错误信息，才能获取到输出和错误信息。
 
         if not multipart:
             command = f'you-get -i {url} -c {self.cookiesPath}'
@@ -504,8 +510,9 @@ class Controller:
             return subtitleTitleDict
 
     def articleConfirm(self, linkSign):
-        imgUrlPattern = re.compile('"url":"(.+?)"')
+        getImgUrlPattern = re.compile('"url":"(.+?)"')
         pLabelPattern = re.compile('<p.+/p>')
+        finalImgUrlConfirm = re.compile('https://i[0-9]+\.hdslb\.com/bfs/article/.*')
         imagesUrlList = []
 
         try:
@@ -525,7 +532,7 @@ class Controller:
                 # 获取所有img标签和p标签
                 elements = soup.select_one('#read-article-holder').find_all(['img', 'p'])
             except Exception:
-                elements = [i.replace(r'\u002F', '/') for i in re.findall(imgUrlPattern, response.text)]
+                elements = [i.replace(r'\u002F', '/') for i in re.findall(getImgUrlPattern, response.text)]
             for u in elements:
 
                 if not re.findall(pLabelPattern, str(u)):
@@ -533,7 +540,12 @@ class Controller:
 
                         imagesUrlList.append(u)
                     else:
-                        imagesUrlList.append('https:' + u['data-src'])
+                        initImagesUrl=u['data-src']
+                        if re.findall(finalImgUrlConfirm, initImagesUrl):
+                            imagesUrlList.append(initImagesUrl)
+                        else:
+                            imagesUrlList.append('https:' + initImagesUrl)
+
             print(imagesUrlList)
 
             return title, imagesUrlList

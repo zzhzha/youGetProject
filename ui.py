@@ -4,11 +4,6 @@ import keyboard as kb
 import threading
 
 
-def thread_it(func, *args):
-    t = threading.Thread(target=func, args=args)
-    t.daemon = True
-    t.start()
-
 
 class WinGUI(Tk):
     def __init__(self):
