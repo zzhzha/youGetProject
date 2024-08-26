@@ -54,9 +54,6 @@ import configparser
 # user = ctypes.windll.LoadLibrary('C:\\Windows\\System32\\user32.dll')
 
 
-def run_cmd_print_tips(cmd,tips):
-    os.system(cmd)
-    print(tips)
 def getHeaders(refererUrl):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '

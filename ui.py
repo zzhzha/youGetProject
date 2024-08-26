@@ -1,6 +1,13 @@
 from tkinter import *
 from tkinter.ttk import *
 import keyboard as kb
+import threading
+
+
+def thread_it(func, *args):
+    t = threading.Thread(target=func, args=args)
+    t.daemon = True
+    t.start()
 
 
 class WinGUI(Tk):
@@ -11,7 +18,6 @@ class WinGUI(Tk):
         self.tk_button_beginButton = self.__tk_button_beginButton(self.tk_frame_managePanel)
         self.tk_frame_sheet = self.__tk_frame_sheet(self)
         self.tk_table_sheet = self.__tk_table_sheet(self.tk_frame_sheet)
-
 
     def __win(self):
         self.title("Tkinter布局助手")
@@ -92,7 +98,6 @@ class WinGUI(Tk):
         return tk_table
 
 
-
 class Win(WinGUI):
     def __init__(self, controller):
         self.ctl = controller
@@ -104,7 +109,8 @@ class Win(WinGUI):
     def __event_bind(self):
         self.tk_button_beginButton.bind('<Button-1>', self.ctl.startDownloading)
         self.tk_table_sheet.bind('<Delete>', self.ctl.multiSelectDelete)
-        kb.add_hotkey('Ctrl + C', self.ctl.manageCopy)
+        kb.add_hotkey('Ctrl + C', lambda: threading.Thread(target=self.ctl.manageCopy, daemon=True).start())
+        # kb.add_hotkey('Ctrl + C', self.ctl.manageCopy)
 
     # def __style_config(self):
     #     pass
