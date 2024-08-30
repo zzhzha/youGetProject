@@ -212,8 +212,12 @@ class Controller:
 
     # 设置剪贴板多选删除操作
     def multiSelectDelete(self, event):
-        for item in self.ui.tk_table_sheet.selection():
-            self.ui.tk_table_sheet.delete(item)
+        selected_items = self.ui.tk_table_sheet.selection()  # 获取所有选中的项的ID
+        for item in selected_items:
+            if item in self.ui.tk_table_sheet.get_children():  # 检查项是否存在
+                self.ui.tk_table_sheet.delete(item)
+        # for item in self.ui.tk_table_sheet.selection():
+        #     self.ui.tk_table_sheet.delete(item)
         """
         多选删除
         """
@@ -311,7 +315,7 @@ class Controller:
             [('title','BV1234567890'),[('subtitle1','p1'),('subtitle2','p2'),('subtitle3','p3'),……]],
             [('title','cv1234567890'),['url1.jpg','url2.jpg','url3.jpg',……]]
         ]'''
-        self.ui.tk_table_sheet.delete(*self.ui.tk_table_sheet.get_children())
+        # self.ui.tk_table_sheet.delete(*self.ui.tk_table_sheet.get_children())
 
         """
         开始下载
