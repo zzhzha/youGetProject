@@ -126,7 +126,7 @@ class Controller:
         self.rootPath = os.path.dirname(os.path.abspath(__file__))
         self.videoPath: str = self.rootPath + '\\Videos'  #保存所有视频的文件夹
         self.articlePath = self.rootPath + '\\Articles'
-        self.VideoInfoConfirmPattern=re.compile("<script>window\.__INITIAL_STATE__=\{(.*?)};\(function")
+        self.VideoInfoConfirmPattern=re.compile("<script>window\.__INITIAL_STATE__=(\{.*?});\(function")
 
         if not os.path.exists(self.videoPath):
             os.makedirs(self.videoPath)
@@ -476,8 +476,14 @@ class Controller:
         # 若为单p视频，则获取视频的标题，返回字典。键为h1标题，值为空列表。
         # 若解析失败，返回False。
         videoUrl = f'https://www.bilibili.com/video/{linkSign}'
+        start_time = time.time()
         outinfo, errinfo = self.getVideoInfo(videoUrl)
+        end_time = time.time()
+        print(f"解析视频链接耗时：{end_time - start_time}秒")
         subtitleTitleDict = {}
+        # 格式为{}，键为h1标题，值为列表，元素为副标题。
+        # 若为单p视频，则返回{hi标题:[]}。
+        # 若为多p视频，则返回{hi标题:[副标题1, 副标题2, 副标题3, …]}。
 
         if 'you-get: [error] oops, something went wrong.' in errinfo:
             # 如果链接解析失败，说明该链接下没有视频，返回False
@@ -486,51 +492,19 @@ class Controller:
             # 如果为多p视频
             response=self.s.get(videoUrl,headers=getHeaders(videoUrl))
             response.encoding='utf-8'
-            time.sleep(0.5)
-            text = self.VideoInfoConfirmPattern.search(response.text).group()
+            text = self.VideoInfoConfirmPattern.search(response.text).group(1)
             exactInfoFix = re.sub(r'(\\u[a-zA-Z0-9]{4})', lambda x: x.group(1).encode("utf-8").decode("unicode_escape"),
                                   text)
             exactInfoJson = json.loads(exactInfoFix)
             videoData=exactInfoJson['videoData']
             title = videoData['title']
+            subtitleTitleDict[title] = []
             videosInfoLIist=videoData['pages']
             for i in range(len(videosInfoLIist)):
                 subtitle = videosInfoLIist[i]['part']
+                subtitleTitleDict[title].append(subtitle)
+            return subtitleTitleDict
 
-
-            # start_time = time.time()
-            #
-            # multipartOutinfo = self.getVideoInfo(videoUrl, multipart=True)[0]
-            # end_time = time.time()
-            # print(f"解析多p视频链接耗时：{end_time - start_time}秒")
-            # start_time = time.time()
-            # for i in multipartOutinfo.split('\n'):
-            #
-            #     # title:               進撃の巨人 CG短片 by:Masashi Imagawa (P1. Attack on titan 進撃の巨人)'
-            #     # 当视频为多p时，会有多个标题。而此时通过you-get获取到的包含标题行中，
-            #     # title后、括号前为视频标题，括号内为集数和分p视频的标题。
-            #     if 'title:' in i:
-            #         # print('出现包含标题行')
-            #         h1Title, Subtitle = getMutipleVideoH1TitleAndSubtitle(i.strip())
-            #
-            #         if not subtitleTitleDict:
-            #             subtitleTitleDict[h1Title] = []
-            #         subtitleTitleDict[h1Title].append(Subtitle)
-            #         #     # 去除开头的标题行
-            #         #     # 如 進撃の巨人 CG短片 by:Masashi Imagawa (P1. Attack on titan 進撃の巨人)
-            #         #     removeTitleText = i.split('title:')[1].strip()
-            #         #
-            #         #     # 获取视频标题
-            #         #     # 如 進撃の巨人 CG短片 by:Masashi Imagawa
-            #         #     h1Title=removeTitleText.split('(P1.')[0].strip()
-            #         #
-            #         #     # 若为第一集，则将标题作为字典的键，并初始化空列表作为值
-            #         #     subtitleTitleDict[h1Title] = []
-            # end_time = time.time()
-            # print(f"获取多p视频标题和副标题耗时：{end_time - start_time}秒")
-            #
-            # print('获取到多p视频标题和副标题')
-            # return subtitleTitleDict
 
         else:
             title = getSingleVideoTitle(outinfo.strip())
