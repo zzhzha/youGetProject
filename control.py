@@ -1,4 +1,6 @@
 import json
+
+from testRequestMutipleVideoInfo import headers
 from ui import Win
 import re
 import win32api
@@ -55,7 +57,7 @@ import configparser
 # user = ctypes.windll.LoadLibrary('C:\\Windows\\System32\\user32.dll')
 
 
-def getHeaders(refererUrl):
+def getHeaders(refererUrl='www.bilibili.com'):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
                       'Chrome/127.0.0.0 Safari/537.36',
@@ -141,6 +143,7 @@ class Controller:
         self.s = requests.Session()
         self.cookiesPath = self.getCookiesPath()
         self.ui.protocol("WM_DELETE_WINDOW", self.closeAction)
+
 
     def addConfigUIFunction_WarnningAlert(self):
         pass
@@ -445,29 +448,37 @@ class Controller:
             thread_it(self.setWarnningWindowTop)
 
     # 获取视频错误信息和输出信息
-    def getVideoInfo(self, url, multipart=False):
-        # 可能是唯一且必须要阻塞线程以获取输出和错误信息的方法
-        # 因为you-get的输出和错误信息都在终端中，而终端的输出和错误信息是通过管道获取的，
-        # 所以需要通过阻塞获取输出和错误信息，才能获取到输出和错误信息。
-
-        if not multipart:
-            command = f'you-get -i {url}'
-
-            # command = f'you-get -i {url} -c {self.cookiesPath}'
+    def getVideoInfo(self, videoUrl):
+        response=self.s.get(videoUrl,headers=getHeaders())
+        response.encoding='utf-8'
+        if response.status_code == 200:
+            return response
         else:
-            command = f'you-get -i --playlist {url}'
+            return False
 
-            # command = f'you-get -i --playlist {url} -c {self.cookiesPath}'
-
-        proc = subprocess.Popen(
-            command,  # cmd特定的查询空间的命令
-            stdin=None,  # 标准输入 键盘
-            stdout=subprocess.PIPE,  # -1 标准输出（演示器、终端) 保存到管道中以便进行操作
-            stderr=subprocess.PIPE,  # 标准错误，保存到管道
-            shell=True)
-        info = proc.communicate()
-        outinfo, errinfo = info[0].decode('utf-8'), info[1].decode('utf-8')  # 获取错误信息
-        return outinfo, errinfo
+    # def getVideoInfo(self, url, multipart=False):
+    #     # 可能是唯一且必须要阻塞线程以获取输出和错误信息的方法
+    #     # 因为you-get的输出和错误信息都在终端中，而终端的输出和错误信息是通过管道获取的，
+    #     # 所以需要通过阻塞获取输出和错误信息，才能获取到输出和错误信息。
+    #
+    #     if not multipart:
+    #         command = f'you-get -i {url}'
+    #
+    #         # command = f'you-get -i {url} -c {self.cookiesPath}'
+    #     else:
+    #         command = f'you-get -i --playlist {url}'
+    #
+    #         # command = f'you-get -i --playlist {url} -c {self.cookiesPath}'
+    #
+    #     proc = subprocess.Popen(
+    #         command,  # cmd特定的查询空间的命令
+    #         stdin=None,  # 标准输入 键盘
+    #         stdout=subprocess.PIPE,  # -1 标准输出（演示器、终端) 保存到管道中以便进行操作
+    #         stderr=subprocess.PIPE,  # 标准错误，保存到管道
+    #         shell=True)
+    #     info = proc.communicate()
+    #     outinfo, errinfo = info[0].decode('utf-8'), info[1].decode('utf-8')  # 获取错误信息
+    #     return outinfo, errinfo
 
     # 检查
     def videoConfirm(self, linkSign):
@@ -477,21 +488,22 @@ class Controller:
         # 若解析失败，返回False。
         videoUrl = f'https://www.bilibili.com/video/{linkSign}'
         start_time = time.time()
-        outinfo, errinfo = self.getVideoInfo(videoUrl)
+        response = self.getVideoInfo(videoUrl)
+        # outinfo, errinfo = self.getVideoInfo(videoUrl)
         end_time = time.time()
         print(f"解析视频链接耗时：{end_time - start_time}秒")
-        subtitleTitleDict = {}
-        # 格式为{}，键为h1标题，值为列表，元素为副标题。
-        # 若为单p视频，则返回{hi标题:[]}。
-        # 若为多p视频，则返回{hi标题:[副标题1, 副标题2, 副标题3, …]}。
+        '''        
+        格式为 {}，键为h1标题，值为列表，元素为副标题。
+        若为单p视频，则返回 { h1标题 : [] } 
+        若为多p视频，则返回 { h1标题 : [ 副标题1, 副标题2, 副标题3, …  ] }
+        '''
 
-        if 'you-get: [error] oops, something went wrong.' in errinfo:
+        if not response:
             # 如果链接解析失败，说明该链接下没有视频，返回False
             return False
-        elif 'you-get: This is a multipart video. (use --playlist to download all parts.)' in errinfo:
+        else:
             # 如果为多p视频
-            response=self.s.get(videoUrl,headers=getHeaders(videoUrl))
-            response.encoding='utf-8'
+            subtitleTitleDict = {}
             text = self.VideoInfoConfirmPattern.search(response.text).group(1)
             exactInfoFix = re.sub(r'(\\u[a-zA-Z0-9]{4})', lambda x: x.group(1).encode("utf-8").decode("unicode_escape"),
                                   text)
@@ -500,17 +512,18 @@ class Controller:
             title = videoData['title']
             subtitleTitleDict[title] = []
             videosInfoLIist=videoData['pages']
-            for i in range(len(videosInfoLIist)):
-                subtitle = videosInfoLIist[i]['part']
-                subtitleTitleDict[title].append(subtitle)
-            return subtitleTitleDict
+            if len(videosInfoLIist) == 1:
+                # 单p视频
+                subtitleTitleDict[title] = []
+                return subtitleTitleDict
 
+            else:
+                # 多p视频
+                for i in range(len(videosInfoLIist)):
+                    subtitle = videosInfoLIist[i]['part']
+                    subtitleTitleDict[title].append(subtitle)
+                return subtitleTitleDict
 
-        else:
-            title = getSingleVideoTitle(outinfo.strip())
-            subtitleTitleDict[title] = []
-            # 给出的链接为单个有效视频链接，将链接添加到表格中
-            return subtitleTitleDict
 
     def articleConfirm(self, linkSign):
         getImgUrlPattern = re.compile('"url":"(.+?)"')
