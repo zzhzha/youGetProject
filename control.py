@@ -1,3 +1,4 @@
+import json
 from ui import Win
 import re
 import win32api
@@ -125,7 +126,7 @@ class Controller:
         self.rootPath = os.path.dirname(os.path.abspath(__file__))
         self.videoPath: str = self.rootPath + '\\Videos'  #保存所有视频的文件夹
         self.articlePath = self.rootPath + '\\Articles'
-        self.videoConfirms_threads = []
+        self.VideoInfoConfirmPattern=re.compile("<script>window\.__INITIAL_STATE__=\{(.*?)};\(function")
 
         if not os.path.exists(self.videoPath):
             os.makedirs(self.videoPath)
@@ -140,19 +141,6 @@ class Controller:
         self.s = requests.Session()
         self.cookiesPath = self.getCookiesPath()
         self.ui.protocol("WM_DELETE_WINDOW", self.closeAction)
-
-    def monitor_viedoConfirms_threads(self):
-        """
-        监控调用viedoConfirm方法的所有线程，持续检索所有线程的is_alive状态，
-        若都为False，则允许点击开始下载按钮，若其中一个状态为True，则禁止点击开始下载按钮
-        """
-        while True:
-            if all(not t.is_alive() for t in self.videoConfirms_threads):
-                self.ui.start_download_button.config(state='normal')
-            else:
-                self.ui.start_download_button.config(state='disabled')
-            time.sleep(1)
-
 
     def addConfigUIFunction_WarnningAlert(self):
         pass
@@ -301,9 +289,9 @@ class Controller:
     # 开始下载
     def startDownloading(self, evt):
         kb.remove_all_hotkeys()
-        self.ui.tk_button_beginButton.configure(state=DISABLED)
         # treeveiw没有state属性
         # self.ui.tk_table_sheet.configure(state=DISABLED)
+        self.ui.tk_button_beginButton.configure(state=DISABLED)
         self.ui.tk_table_sheet.configure(selectmode='none')
 
         allLinksList = self.getAllDownloadLinks()
@@ -463,9 +451,13 @@ class Controller:
         # 所以需要通过阻塞获取输出和错误信息，才能获取到输出和错误信息。
 
         if not multipart:
-            command = f'you-get -i {url} -c {self.cookiesPath}'
+            command = f'you-get -i {url}'
+
+            # command = f'you-get -i {url} -c {self.cookiesPath}'
         else:
-            command = f'you-get -i --playlist {url} -c {self.cookiesPath}'
+            command = f'you-get -i --playlist {url}'
+
+            # command = f'you-get -i --playlist {url} -c {self.cookiesPath}'
 
         proc = subprocess.Popen(
             command,  # cmd特定的查询空间的命令
@@ -492,35 +484,55 @@ class Controller:
             return False
         elif 'you-get: This is a multipart video. (use --playlist to download all parts.)' in errinfo:
             # 如果为多p视频
-            multipartOutinfo = self.getVideoInfo(videoUrl, multipart=True)[0]
-            for i in multipartOutinfo.split('\n'):
+            response=self.s.get(videoUrl,headers=getHeaders(videoUrl))
+            response.encoding='utf-8'
+            time.sleep(0.5)
+            text = self.VideoInfoConfirmPattern.search(response.text).group()
+            exactInfoFix = re.sub(r'(\\u[a-zA-Z0-9]{4})', lambda x: x.group(1).encode("utf-8").decode("unicode_escape"),
+                                  text)
+            exactInfoJson = json.loads(exactInfoFix)
+            videoData=exactInfoJson['videoData']
+            title = videoData['title']
+            videosInfoLIist=videoData['pages']
+            for i in range(len(videosInfoLIist)):
+                subtitle = videosInfoLIist[i]['part']
 
-                # title:               進撃の巨人 CG短片 by:Masashi Imagawa (P1. Attack on titan 進撃の巨人)'
-                # 当视频为多p时，会有多个标题。而此时通过you-get获取到的包含标题行中，
-                # title后、括号前为视频标题，括号内为集数和分p视频的标题。
-                if 'title:' in i:
-                    print('出现包含标题行')
-                    h1Title, Subtitle = getMutipleVideoH1TitleAndSubtitle(i.strip())
 
-                    if not subtitleTitleDict:
-                        subtitleTitleDict[h1Title] = []
-                    subtitleTitleDict[h1Title].append(Subtitle)
-                    #     # 去除开头的标题行
-                    #     # 如 進撃の巨人 CG短片 by:Masashi Imagawa (P1. Attack on titan 進撃の巨人)
-                    #     removeTitleText = i.split('title:')[1].strip()
-                    #
-                    #     # 获取视频标题
-                    #     # 如 進撃の巨人 CG短片 by:Masashi Imagawa
-                    #     h1Title=removeTitleText.split('(P1.')[0].strip()
-                    #
-                    #     # 若为第一集，则将标题作为字典的键，并初始化空列表作为值
-                    #     subtitleTitleDict[h1Title] = []
-
-            print('获取到多p视频标题和副标题')
-            return subtitleTitleDict
+            # start_time = time.time()
+            #
+            # multipartOutinfo = self.getVideoInfo(videoUrl, multipart=True)[0]
+            # end_time = time.time()
+            # print(f"解析多p视频链接耗时：{end_time - start_time}秒")
+            # start_time = time.time()
+            # for i in multipartOutinfo.split('\n'):
+            #
+            #     # title:               進撃の巨人 CG短片 by:Masashi Imagawa (P1. Attack on titan 進撃の巨人)'
+            #     # 当视频为多p时，会有多个标题。而此时通过you-get获取到的包含标题行中，
+            #     # title后、括号前为视频标题，括号内为集数和分p视频的标题。
+            #     if 'title:' in i:
+            #         # print('出现包含标题行')
+            #         h1Title, Subtitle = getMutipleVideoH1TitleAndSubtitle(i.strip())
+            #
+            #         if not subtitleTitleDict:
+            #             subtitleTitleDict[h1Title] = []
+            #         subtitleTitleDict[h1Title].append(Subtitle)
+            #         #     # 去除开头的标题行
+            #         #     # 如 進撃の巨人 CG短片 by:Masashi Imagawa (P1. Attack on titan 進撃の巨人)
+            #         #     removeTitleText = i.split('title:')[1].strip()
+            #         #
+            #         #     # 获取视频标题
+            #         #     # 如 進撃の巨人 CG短片 by:Masashi Imagawa
+            #         #     h1Title=removeTitleText.split('(P1.')[0].strip()
+            #         #
+            #         #     # 若为第一集，则将标题作为字典的键，并初始化空列表作为值
+            #         #     subtitleTitleDict[h1Title] = []
+            # end_time = time.time()
+            # print(f"获取多p视频标题和副标题耗时：{end_time - start_time}秒")
+            #
+            # print('获取到多p视频标题和副标题')
+            # return subtitleTitleDict
 
         else:
-            subtitleTitleDict = {}
             title = getSingleVideoTitle(outinfo.strip())
             subtitleTitleDict[title] = []
             # 给出的链接为单个有效视频链接，将链接添加到表格中
