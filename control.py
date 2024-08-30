@@ -398,9 +398,9 @@ class Controller:
 
         # print("下载完成")
 
-        self.ui.tk_button_beginButton.configure(state=NORMAL)
         # treeveiw没有state属性
         # self.ui.tk_frame_sheet.configure(state=NORMAL)
+        self.ui.tk_button_beginButton.configure(state=NORMAL)
         self.ui.tk_table_sheet.configure(selectmode='extended')
         # 此处还有问题，需要确认所有线程都执行完毕后再重新设置剪贴板监听
         kb.add_hotkey('Ctrl + C', lambda: threading.Thread(target=self.manageCopy, daemon=True).start())
