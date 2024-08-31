@@ -454,15 +454,21 @@ class Controller:
 
     # 获取视频错误信息和输出信息
     def getVideoInfo(self, videoUrl):
-        while True:
-            try:
-                response = self.s.get(videoUrl, headers=getHeaders())
-                time.sleep(0.5)
-            except Exception as e:
-                print(e)
-                pass
-            else:
-                break
+        '''
+        获取视频信息,返回response对象,若获取失败,返回False
+        :param videoUrl:
+        :return: response
+        '''
+        response = self.s.get(videoUrl, headers=getHeaders())
+        # while True:
+        #     try:
+        #         response = self.s.get(videoUrl, headers=getHeaders())
+        #         time.sleep(0.5)
+        #     except  as :
+        #         print(e)
+        #         pass
+        #     else:
+        #         break
         response.encoding='utf-8'
         if response.status_code == 200:
             return response
