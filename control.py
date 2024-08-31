@@ -300,8 +300,9 @@ class Controller:
         # self.ui.tk_table_sheet.configure(state=DISABLED)
         self.ui.tk_button_beginButton.configure(state=DISABLED)
         self.ui.tk_table_sheet.configure(selectmode='none')
-
         allLinksList = self.getAllDownloadLinks()
+        self.ui.tk_table_sheet.delete(*self.ui.tk_table_sheet.get_children())
+
         if not allLinksList:
             thread_it(win32api.MessageBox, 0, "表中无数据，请先添加数据", '错误', win32con.MB_ICONWARNING)
             thread_it(self.setWarnningWindowTop)
@@ -453,7 +454,15 @@ class Controller:
 
     # 获取视频错误信息和输出信息
     def getVideoInfo(self, videoUrl):
-        response=self.s.get(videoUrl,headers=getHeaders())
+        while True:
+            try:
+                response = self.s.get(videoUrl, headers=getHeaders())
+                time.sleep(0.5)
+            except Exception as e:
+                print(e)
+                pass
+            else:
+                break
         response.encoding='utf-8'
         if response.status_code == 200:
             return response
