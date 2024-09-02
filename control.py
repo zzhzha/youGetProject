@@ -229,21 +229,7 @@ class Controller:
         win32clipboard.CloseClipboard()
         return data
 
-    def monitorClipboard(self):
-        """
-        监听剪贴板，当内容改变时，调用manageCopy方法
-        """
-        previous_content = self.get_clipboard_text()
-        print(f"初始剪贴板内容: {previous_content}")
-        while True:
-            if win32clipboard.IsClipboardFormatAvailable(win32con.CF_UNICODETEXT):
-                current_content = self.get_clipboard_text()
-                if current_content != previous_content:
-                    previous_content = current_content
-                    thread_it(self.manageCopy)
-            time.sleep(0.05)
 
-    # 设置警告窗口置顶
     def setWarnningWindowTop(self):
         a = 1
         print("输入已阻止")
@@ -293,6 +279,7 @@ class Controller:
 
         if not allLinksList:
             thread_it(win32api.MessageBox, 0, "表中无数据，请先添加数据", '错误', win32con.MB_ICONWARNING)
+            # 上面去除的快捷键等在setWarnningWindowTop中重新设置
             thread_it(self.setWarnningWindowTop)
 
             return
