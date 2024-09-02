@@ -254,10 +254,11 @@ class Controller:
         else:
             print("找到错误窗口")
             hwnd = win32gui.FindWindow(None, "错误")
+        # 以下的目标是使弹出的错误窗口置顶，并一直保持在顶层且保持为焦点窗口。
+        # 达到窗口保持在嘴上层，并且由于窗口一直处于焦点状态，实现不关闭窗口用户就无法进行下一步行为的效果
         while win32gui.IsWindow(hwnd):
-            if win32gui.IsIconic(hwnd):
-                win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
             if not win32gui.IsWindowVisible(hwnd):
+                # 若窗口不可见（如表现为窗口被最小化到任务栏，窗口被程序主动隐藏，窗口被其他窗口覆盖（不在最上层
                 win32gui.ShowWindow(hwnd, win32con.SW_SHOW)
 
             # 以下提示SetForegroundWindow在非主线程的其他线程上调用时可能会报错（实际就是会报错）
@@ -271,9 +272,11 @@ class Controller:
             # win32gui.PostMessage(hwnd, win32con.WM_SYSCOMMAND, win32con.SC_RESTORE, 0)
             # win32gui.PostMessage(hwnd, win32con.WM_SYSCOMMAND, win32con.SC_MOVE, 0)
             # win32gui.PostMessage(hwnd, win32con.WM_SYSCOMMAND, win32con.SC_TOPMOST, 0)
-
+            # 以下提示SetWindowPos没有SWP_NOACTIVATE属性
             # win32gui.SetWindowPos(hwnd, win32con.HWND_TOPMOST, 0, 0, 0, 0, win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
 
+            # win32gui.SetWindowPos(hwnd, win32con.HWND_TOPMOST, 0, 0, 0, 0,
+            #                       win32con.SWP_NOMOVE | win32con.SWP_NOACTIVATE | win32con.SWP_NOOWNERZORDER | win32con.SWP_SHOWWINDOW | win32con.SWP_NOSIZE)
             time.sleep(0.05)
 
         print("窗口已关闭")
@@ -457,7 +460,7 @@ class Controller:
         '''
         获取视频信息,返回response对象,若获取失败,返回False
         :param videoUrl:
-        :return: response
+        :return: response，若获取失败，返回False
         '''
         response = self.s.get(videoUrl, headers=getHeaders())
         # while True:
