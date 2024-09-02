@@ -9,7 +9,6 @@ import win32gui
 import threading
 import time
 import win32clipboard
-import subprocess
 from tkinter import *
 from tkinter import messagebox
 import keyboard as kb
@@ -123,6 +122,9 @@ class Controller:
         cf = configparser.ConfigParser()
         cf.read('config.ini', encoding='utf-8')
         cookiesPath = cf.get('Path', 'cookiesPath')
+        if not os.path.exists(cookiesPath):
+            thread_it(win32api.MessageBox, 0, "请先在ini填写cookies路径", '错误', win32con.MB_ICONWARNING,daemon=False)
+            exit()
         return cookiesPath
 
     # 获取需要下载的所有的链接
