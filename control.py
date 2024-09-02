@@ -413,13 +413,21 @@ class Controller:
                 thread_it(self.setWarnningWindowTop)
         elif type == 'article':
             title, imgUrlList = self.articleConfirm(linkSign)
-            if imgUrlList:
+            # 有重复项都返回True;无重复项返回标题和图片链接列表；解析失败返回False
+            if type(imgUrlList) != bool:
                 # 若解析成功，将解析结果添加到表格中
                 self.addArticleItem(title, linkSign, imgUrlList)
+
             else:
-                # 若解析失败，弹出警告窗口
-                thread_it(win32api.MessageBox, 0, "链接解析失败，请检查链接是否正确", '错误', win32con.MB_ICONWARNING)
-                thread_it(self.setWarnningWindowTop)
+                if imgUrlList:
+                    # imgUrlList为True，说明图片链接列表中有重复项，直接返回
+                    return
+                else:
+                    # 若解析失败，弹出警告窗口
+                    thread_it(win32api.MessageBox, 0, "链接解析失败，请检查链接是否正确", '错误',
+                              win32con.MB_ICONWARNING)
+                    thread_it(self.setWarnningWindowTop)
+
 
         else:
             thread_it(win32api.MessageBox, 0, "复制格式错误，请重新复制", '错误', win32con.MB_ICONWARNING,)
@@ -527,6 +535,11 @@ class Controller:
             int(linkSign[2:])
         except ValueError:
             return False, False
+        for i in self.ui.tk_table_sheet.get_children():
+            if self.ui.tk_table_sheet.item(i)['values'][1] == linkSign:
+                # 若专栏已存在，则跳过
+                return True, True
+
         articleUrl = f'https://www.bilibili.com/read/{linkSign}'
         headers = getHeaders(articleUrl)
         response = self.s.get(articleUrl, headers=headers)
@@ -560,6 +573,10 @@ class Controller:
 
     def addVideoItem(self, result, linkSign):
         for title, subtitleList in result.items():
+            for i in self.ui.tk_table_sheet.get_children():
+                if self.ui.tk_table_sheet.item(i)['values'][0] == title:
+                    # 若标题已存在，则跳过
+                    return
             if not subtitleList:
                 # 视频为单p，则将标题和BV号添加到表格中
                 self.ui.tk_table_sheet.insert('', END, open=True, text='', values=(title, linkSign))
