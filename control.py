@@ -110,7 +110,7 @@ def sanitizeFilename(filename: str) -> str:
     return first
 
 
-def thread_it(func, *args,daemon=True):
+def thread_it(func, *args, daemon=True):
     t = threading.Thread(target=func, args=args)
     t.daemon = daemon
     t.start()
@@ -128,7 +128,7 @@ class Controller:
         self.rootPath = os.path.dirname(os.path.abspath(__file__))
         self.videoPath: str = self.rootPath + '\\Videos'  #保存所有视频的文件夹
         self.articlePath = self.rootPath + '\\Articles'
-        self.VideoInfoConfirmPattern=re.compile("<script>window\.__INITIAL_STATE__=(\{.*?});\(function")
+        self.VideoInfoConfirmPattern = re.compile("<script>window\.__INITIAL_STATE__=(\{.*?});\(function")
 
         if not os.path.exists(self.videoPath):
             os.makedirs(self.videoPath)
@@ -143,7 +143,6 @@ class Controller:
         self.s = requests.Session()
         self.cookiesPath = self.getCookiesPath()
         self.ui.protocol("WM_DELETE_WINDOW", self.closeAction)
-
 
     def addConfigUIFunction_WarnningAlert(self):
         pass
@@ -228,7 +227,6 @@ class Controller:
         data = win32clipboard.GetClipboardData()
         win32clipboard.CloseClipboard()
         return data
-
 
     def setWarnningWindowTop(self):
         a = 1
@@ -318,7 +316,7 @@ class Controller:
 
                     print(f"开始下载：{generateTitle}")
                     command = f'you-get --skip-existing-file-size-check -o "{saveVideoFolderPath}" -O "{generateTitle}" {videoUrl} -c {self.cookiesPath}'
-                    thread_it(os.system, command,daemon=False)
+                    thread_it(os.system, command, daemon=False)
                     # thread_it(run_cmd_print_tips, command, f"标题为：{generateTitle} 的视频下载完成")
                 #     proc = subprocess.Popen(
                 #         command,
@@ -363,9 +361,9 @@ class Controller:
                     os.makedirs(saveImagesFolderPath)
                 print(f"开始下载{generateTitle}专栏下的图片")
                 for imageUrl in i[1]:
-                    command = f'you-get {imageUrl} --skip-existing-file-size-check --output-dir "{saveImagesFolderPath}" -O "{i[1].index(imageUrl)+1}" -c {self.cookiesPath}'
+                    command = f'you-get {imageUrl} --skip-existing-file-size-check --output-dir "{saveImagesFolderPath}" -O "{i[1].index(imageUrl) + 1}" -c {self.cookiesPath}'
                     # command = f'you-get {imageUrl} --output-dir "{saveImagesFolderPath}" -c {self.cookiesPath}'
-                    thread_it(os.system, command,daemon=False)
+                    thread_it(os.system, command, daemon=False)
                     time.sleep(0.1)
                     # thread_it(run_cmd_print_tips, command, f"标题为：{generateTitle} 的图片下载完成")
                     # proc = subprocess.Popen(
@@ -413,9 +411,7 @@ class Controller:
                 thread_it(self.setWarnningWindowTop)
         elif type == 'article':
             title, imgUrlList = self.articleConfirm(linkSign)
-            # 有重复项都返回True;无重复项返回标题和图片链接列表；解析失败返回False
-            if type(imgUrlList) != bool:
-                # 若解析成功，将解析结果添加到表格中
+            if isinstance(imgUrlList, list):
                 self.addArticleItem(title, linkSign, imgUrlList)
 
             else:
@@ -428,9 +424,8 @@ class Controller:
                               win32con.MB_ICONWARNING)
                     thread_it(self.setWarnningWindowTop)
 
-
         else:
-            thread_it(win32api.MessageBox, 0, "复制格式错误，请重新复制", '错误', win32con.MB_ICONWARNING,)
+            thread_it(win32api.MessageBox, 0, "复制格式错误，请重新复制", '错误', win32con.MB_ICONWARNING, )
             thread_it(self.setWarnningWindowTop)
 
     # 获取视频错误信息和输出信息
@@ -450,37 +445,12 @@ class Controller:
         #         pass
         #     else:
         #         break
-        response.encoding='utf-8'
+        response.encoding = 'utf-8'
         if response.status_code == 200:
             return response
         else:
             return False
 
-    # def getVideoInfo(self, url, multipart=False):
-    #     # 可能是唯一且必须要阻塞线程以获取输出和错误信息的方法
-    #     # 因为you-get的输出和错误信息都在终端中，而终端的输出和错误信息是通过管道获取的，
-    #     # 所以需要通过阻塞获取输出和错误信息，才能获取到输出和错误信息。
-    #
-    #     if not multipart:
-    #         command = f'you-get -i {url}'
-    #
-    #         # command = f'you-get -i {url} -c {self.cookiesPath}'
-    #     else:
-    #         command = f'you-get -i --playlist {url}'
-    #
-    #         # command = f'you-get -i --playlist {url} -c {self.cookiesPath}'
-    #
-    #     proc = subprocess.Popen(
-    #         command,  # cmd特定的查询空间的命令
-    #         stdin=None,  # 标准输入 键盘
-    #         stdout=subprocess.PIPE,  # -1 标准输出（演示器、终端) 保存到管道中以便进行操作
-    #         stderr=subprocess.PIPE,  # 标准错误，保存到管道
-    #         shell=True)
-    #     info = proc.communicate()
-    #     outinfo, errinfo = info[0].decode('utf-8'), info[1].decode('utf-8')  # 获取错误信息
-    #     return outinfo, errinfo
-
-    # 检查
     def videoConfirm(self, linkSign):
         # 解析视频链接，获取视频标题和副标题。
         # 若为多p视频，则获取所有p的标题和副标题，返回字典。键为h1标题，值为列表，元素为副标题。
@@ -508,10 +478,10 @@ class Controller:
             exactInfoFix = re.sub(r'(\\u[a-zA-Z0-9]{4})', lambda x: x.group(1).encode("utf-8").decode("unicode_escape"),
                                   text)
             exactInfoJson = json.loads(exactInfoFix)
-            videoData=exactInfoJson['videoData']
+            videoData = exactInfoJson['videoData']
             title = videoData['title']
             subtitleTitleDict[title] = []
-            videosInfoLIist=videoData['pages']
+            videosInfoLIist = videoData['pages']
             if len(videosInfoLIist) == 1:
                 # 单p视频
                 subtitleTitleDict[title] = []
@@ -523,7 +493,6 @@ class Controller:
                     subtitle = videosInfoLIist[i]['part']
                     subtitleTitleDict[title].append(subtitle)
                 return subtitleTitleDict
-
 
     def articleConfirm(self, linkSign):
         getImgUrlPattern = re.compile('"url":"(.+?)"')
@@ -561,7 +530,7 @@ class Controller:
 
                         imagesUrlList.append(u)
                     else:
-                        initImagesUrl=u['data-src']
+                        initImagesUrl = u['data-src']
                         if re.findall(finalImgUrlConfirm, initImagesUrl):
                             imagesUrlList.append(initImagesUrl)
                         else:
