@@ -53,8 +53,6 @@ import configparser
 """
 
 
-# user32 = ctypes.windll.user32
-# user = ctypes.windll.LoadLibrary('C:\\Windows\\System32\\user32.dll')
 
 
 def getHeaders(refererUrl='www.bilibili.com'):
@@ -64,20 +62,6 @@ def getHeaders(refererUrl='www.bilibili.com'):
         'referer': refererUrl
     }
     return headers
-
-
-def getMutipleVideoH1TitleAndSubtitle(text: str):
-    multipartPattern = re.compile(r'title:\s+(.+?)\(P\d+?\.(.+?)\)')
-    m = multipartPattern.findall(text)
-    if m:
-        return m[0][0], m[0][1]
-
-
-def getSingleVideoTitle(text: str):
-    multipartPattern = re.compile(r'title:\s+(.+)')
-    m = multipartPattern.findall(text)
-    if m:
-        return m[0].strip()
 
 
 def exactTypeAndLinkSign(url: str) -> [str, str]:
@@ -101,23 +85,12 @@ def exactTypeAndLinkSign(url: str) -> [str, str]:
     return ['', 'None']
 
 
-def sanitizeFilename(filename: str) -> str:
-    needFixstr = '@~%^&*()-+|:<>=.$`[]?!\''
-    first = sanitize_filename(filename)
-    for i in needFixstr:
-        if i in first:
-            first = first.replace(i, '_')
-    return first
-
 
 def thread_it(func, *args, daemon=True):
     t = threading.Thread(target=func, args=args)
     t.daemon = daemon
     t.start()
-    # return t
-    # t.join()
-    # if sth:
-    #     print(sth)
+
 
 
 class Controller:
@@ -144,8 +117,6 @@ class Controller:
         self.cookiesPath = self.getCookiesPath()
         self.ui.protocol("WM_DELETE_WINDOW", self.closeAction)
 
-    def addConfigUIFunction_WarnningAlert(self):
-        pass
 
     # 获取cookies路径
     def getCookiesPath(self):
@@ -201,14 +172,6 @@ class Controller:
 
         return links
 
-    def initClipboard(self):
-        win32clipboard.OpenClipboard()
-        win32clipboard.SetClipboardData(win32con.CF_UNICODETEXT, 'init')
-        win32clipboard.CloseClipboard()
-        """
-        初始化剪贴板监听
-        """
-
     # 设置剪贴板多选删除操作
     def multiSelectDelete(self, event):
         selected_items = self.ui.tk_table_sheet.selection()  # 获取所有选中的项的ID
@@ -221,12 +184,6 @@ class Controller:
         多选删除
         """
 
-    # 获取剪贴板内容
-    def get_clipboard_text(self):
-        win32clipboard.OpenClipboard()
-        data = win32clipboard.GetClipboardData()
-        win32clipboard.CloseClipboard()
-        return data
 
     def setWarnningWindowTop(self):
         a = 1
@@ -247,17 +204,11 @@ class Controller:
                 # 若窗口不可见（如表现为窗口被最小化到任务栏，窗口被程序主动隐藏，窗口被其他窗口覆盖（不在最上层
                 win32gui.ShowWindow(hwnd, win32con.SW_SHOW)
 
-            # 以下提示SetForegroundWindow在非主线程的其他线程上调用时可能会报错（实际就是会报错）
             try:
                 win32gui.SetForegroundWindow(hwnd)
             except Exception as e:
                 print('错误次数', f'{a}')
                 a += 1
-
-            # win32gui.BringWindowToTop(hwnd)
-
-            # 以下提示SetWindowPos没有SWP_NOACTIVATE属性
-            # win32gui.SetWindowPos(hwnd, win32con.HWND_TOPMOST, 0, 0, 0, 0,win32con.SWP_NOMOVE | win32con.SWP_NOACTIVATE | win32con.SWP_NOOWNERZORDER | win32con.SWP_SHOWWINDOW | win32con.SWP_NOSIZE)
             time.sleep(0.05)
 
         print("窗口已关闭")
@@ -268,8 +219,6 @@ class Controller:
     # 开始下载
     def startDownloading(self):
         kb.remove_all_hotkeys()
-        # treeveiw没有state属性
-        # self.ui.tk_table_sheet.configure(state=DISABLED)
         self.ui.tk_button_beginButton.configure(state=DISABLED)
         self.ui.tk_table_sheet.configure(selectmode='none')
         allLinksList = self.getAllDownloadLinks()
@@ -279,16 +228,13 @@ class Controller:
             thread_it(win32api.MessageBox, 0, "表中无数据，请先添加数据", '错误', win32con.MB_ICONWARNING)
             # 上面去除的快捷键等在setWarnningWindowTop中重新设置
             thread_it(self.setWarnningWindowTop)
-
             return
-            # treeveiw没有state属性
         '''
         [
             [('title','BV1234567890')],
             [('title','BV1234567890'),[('subtitle1','p1'),('subtitle2','p2'),('subtitle3','p3'),……]],
             [('title','cv1234567890'),['url1.jpg','url2.jpg','url3.jpg',……]]
         ]'''
-        # self.ui.tk_table_sheet.delete(*self.ui.tk_table_sheet.get_children())
 
         """
         开始下载
@@ -317,44 +263,7 @@ class Controller:
                     print(f"开始下载：{generateTitle}")
                     command = f'you-get --skip-existing-file-size-check -o "{saveVideoFolderPath}" -O "{generateTitle}" {videoUrl} -c {self.cookiesPath}'
                     thread_it(os.system, command, daemon=False)
-                    # thread_it(run_cmd_print_tips, command, f"标题为：{generateTitle} 的视频下载完成")
-                #     proc = subprocess.Popen(
-                #         command,
-                #         stdin=None,
-                #         stdout=subprocess.PIPE,
-                #         stderr=subprocess.PIPE,
-                #         shell=True)
-                #     info = proc.communicate()
-                #     outinfo, errinfo = info[0].decode('utf-8'), info[1].decode('utf-8')  # 获取错误信息
-                #     print(f"标题为：{generateTitle} 的视频下载完成")
-                # else:
-                #     # 多p视频
-                #     subtitlePnumberList = i[1]
-                #     for n in subtitlePnumberList:
-                #         subtitle, Pnumber = sanitizeFilename(n[0]), n[1]  #对副标题进行处理，去除特殊字符
-                #         if os.path.exists(os.path.join(saveVideoFolderPath, f'{subtitle}.mp4')):
-                #             print(f"{subtitle}.mp4已存在，跳过")
-                #             continue
-                #
-                #         videoUrl = f'https://www.bilibili.com/video/{BVnumber}?p={Pnumber[1:]}'
-                #
-                #         print(f"开始下载{generateTitle}下的副标题为{subtitle}的视频")
-                #         # command = f'you-get {videoUrl} -c {cookiesPath}'
-                #
-                #         command = f'you-get -o "{saveVideoFolderPath}" -O "{subtitle}.mp4" {videoUrl} -c {self.cookiesPath}'
-                #         print(command)
-                #         proc = subprocess.Popen(
-                #             command,
-                #             stdin=None,
-                #             stdout=subprocess.PIPE,
-                #             stderr=subprocess.PIPE,
-                #             shell=True)
-                #         info = proc.communicate()
-                #         outinfo, errinfo = info[0].decode('utf-8'), info[1].decode('utf-8')  # 获取错误信息
-                #         if os.path.exists(os.path.join(saveVideoFolderPath, f'{subtitle}.mp4')):
-                #             print(f"{generateTitle}下的副标题为{subtitle}的视频下载完成")
-                #         else:
-                #             print(f"{generateTitle}下的副标题为{subtitle}的视频下载失败")
+
             else:
                 saveImagesFolderPath = os.path.join(self.articlePath, generateTitle)
                 if not os.path.exists(saveImagesFolderPath):
@@ -362,26 +271,10 @@ class Controller:
                 print(f"开始下载{generateTitle}专栏下的图片")
                 for imageUrl in i[1]:
                     command = f'you-get {imageUrl} --skip-existing-file-size-check --output-dir "{saveImagesFolderPath}" -O "{i[1].index(imageUrl) + 1}" -c {self.cookiesPath}'
-                    # command = f'you-get {imageUrl} --output-dir "{saveImagesFolderPath}" -c {self.cookiesPath}'
                     thread_it(os.system, command, daemon=False)
                     time.sleep(0.1)
-                    # thread_it(run_cmd_print_tips, command, f"标题为：{generateTitle} 的图片下载完成")
-                    # proc = subprocess.Popen(
-                    #     command,  # cmd特定的查询空间的命令
-                    #     stdin=None,  # 标准输入 键盘
-                    #     stdout=subprocess.PIPE,  # -1 标准输出（演示器、终端) 保存到管道中以便进行操作
-                    #     stderr=subprocess.PIPE,  # 标准错误，保存到管道
-                    #     shell=True)
-                    # info = proc.communicate()
-                    # outinfo, errinfo = info[0].decode('utf-8'), info[1].decode('utf-8')  # 获取错误信息
-                # print(f'{generateTitle}专栏下的图片全部下载完成')
 
-        # print("下载完成")
 
-        # treeveiw没有state属性
-        # self.ui.tk_frame_sheet.configure(state=NORMAL)
-
-        # 此处还有问题，需要确认所有线程都执行完毕后再重新设置剪贴板监听
         kb.add_hotkey('Ctrl + C', lambda: threading.Thread(target=self.manageCopy, daemon=True).start())
         self.ui.tk_button_beginButton.configure(state=NORMAL)
         self.ui.tk_table_sheet.configure(selectmode='extended')
@@ -436,15 +329,6 @@ class Controller:
         :return: response，若获取失败，返回False
         '''
         response = self.s.get(videoUrl, headers=getHeaders())
-        # while True:
-        #     try:
-        #         response = self.s.get(videoUrl, headers=getHeaders())
-        #         time.sleep(0.5)
-        #     except  as :
-        #         print(e)
-        #         pass
-        #     else:
-        #         break
         response.encoding = 'utf-8'
         if response.status_code == 200:
             return response
@@ -536,7 +420,6 @@ class Controller:
                         else:
                             imagesUrlList.append('https:' + initImagesUrl)
 
-            print(imagesUrlList)
 
             return title, imagesUrlList
 
@@ -567,29 +450,6 @@ class Controller:
         for imgUrl in imgUrlList:
             self.ui.tk_table_sheet.insert(fatherNode, END, open=True, text='', values=(' ', imgUrl))
 
-    # win32clipboard.OpenClipboard()
-    # win32clipboard.EmptyClipboard()
-    # # 设置剪贴板默认值为 constant，否则若在获取剪贴版时若剪贴板为空，会报错：
-    # # TypeError: Specified clipboard format is not available
-    # win32clipboard.SetClipboardData(win32con.CF_UNICODETEXT, 'constant')
-    #
-    # while self.ui.monitorState:
-    #     time.sleep(0.05)
-    #     text = win32clipboard.GetClipboardData(win32con.CF_UNICODETEXT)
-    #     if text != 'constant':
-    #         win32clipboard.EmptyClipboard()
-    #         win32clipboard.SetClipboardData(win32con.CF_UNICODETEXT, 'constant')
-    #         exactResult = exactTypeAndId(text)
-    #
-    #         if exactResult[0] == 'video':
-    #             pass
-    #         elif exactResult[0] == 'article':
-    #             pass
-    #         else:
-    #             thread_it(win32api.MessageBox, 0, "复制格式错误，请重新复制", '错误', win32con.MB_ICONWARNING)
-    #             thread_it(setWarnningWindowTop)
-
-    # win32clipboard.CloseClipboard()
 
     def closeAction(self):
         if messagebox.askokcancel("Quit", "你确认要退出?"):
@@ -600,20 +460,3 @@ class Controller:
 
         self.ui.quit()
 
-
-'''
-目前要解决问题有两个
-在确认所有视频链接合法前不能点击开始下载按钮。也即是只有所有待确认的视频都确认完毕后才能点击开始下载按钮。
-下载完成后重新设置剪贴板监听需要确认所有线程都执行完毕后，才能重新设置剪贴板监听。
-
-有一个想法是：
-
-定义两个列表，一个存贮确所有认视频链接合法的线程，一个存贮所有下载视频或图片的线程。
-再在程序启动时创建两个线程，
-一个持续检查列表一中的线程是否全部结束，若全部结束则允许点击按钮的操作。否则禁止。
-另一个持续检查列表二中的线程是否全部结束，若全部结束则重新设置剪贴板监听，否则继续监听。
-
-这样就可以保证在所有视频链接确认完毕后，才开始下载，并且在下载完成后，才重新设置剪贴板监听。
-
-all函数能够判断列表内的所有线程是否都结束，若都结束则返回False，否则返回True。
-'''

@@ -98,18 +98,13 @@ class Win(WinGUI):
         self.ctl = controller
         super().__init__()
         self.__event_bind()
-        # self.__style_config()
         self.ctl.init(self)
 
     def __event_bind(self):
         self.tk_button_beginButton.config(command=self.ctl.startDownloading)
-        # self.tk_button_beginButton.bind('<Button-1>', self.ctl.startDownloading)
         self.tk_table_sheet.bind('<Delete>', self.ctl.multiSelectDelete)
         kb.add_hotkey('Ctrl + C', lambda: threading.Thread(target=self.ctl.manageCopy, daemon=True).start())
-        # kb.add_hotkey('Ctrl + C', self.ctl.manageCopy)
 
-    # def __style_config(self):
-    #     pass
 
 
 if __name__ == "__main__":
