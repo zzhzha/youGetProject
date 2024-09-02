@@ -279,21 +279,7 @@ class Controller:
         print("窗口已关闭")
         self.ui.tk_table_sheet.configure(selectmode='extended')
         self.ui.tk_button_beginButton.configure(state=NORMAL)
-        kb.add_hotkey('Ctrl + C', self.manageCopy)
-
-        # while True:
-        #     try:
-        #         hwnd = win32gui.FindWindow(None, "错误")
-        #         win32gui.SetForegroundWindow(hwnd)
-        #         time.sleep(0.5)
-        #         # hwnd = win32gui.FindWindow('python.exe', None)
-        #         # 窗口需要正常大小且在后台，不能最小化
-        #         # win32gui.ShowWindow(hwnd, win32con.SW_SHOWNORMAL)
-        #         # win32gui.SetWindowPos(hwnd, win32con.HWND_TOPMOST, 0, 0, 0, 0,
-        #         #                       win32con.SWP_NOMOVE | win32con.SWP_NOACTIVATE | win32con.SWP_NOOWNERZORDER | win32con.SWP_SHOWWINDOW | win32con.SWP_NOSIZE)
-        #         # #
-        #     except Exception as e:
-        #         break
+        kb.add_hotkey('Ctrl + C', lambda: threading.Thread(target=self.manageCopy, daemon=True).start())
 
     # 开始下载
     def startDownloading(self):
