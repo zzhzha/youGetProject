@@ -110,11 +110,11 @@ def sanitizeFilename(filename: str) -> str:
     return first
 
 
-def thread_it(func, *args):
+def thread_it(func, *args,daemon=True):
     t = threading.Thread(target=func, args=args)
-    t.daemon = True
+    t.daemon = daemon
     t.start()
-    return t
+    # return t
     # t.join()
     # if sth:
     #     print(sth)
@@ -318,7 +318,7 @@ class Controller:
 
                     print(f"开始下载：{generateTitle}")
                     command = f'you-get --skip-existing-file-size-check -o "{saveVideoFolderPath}" -O "{generateTitle}" {videoUrl} -c {self.cookiesPath}'
-                    thread_it(os.system, command)
+                    thread_it(os.system, command,daemon=False)
                     # thread_it(run_cmd_print_tips, command, f"标题为：{generateTitle} 的视频下载完成")
                 #     proc = subprocess.Popen(
                 #         command,
@@ -365,7 +365,7 @@ class Controller:
                 for imageUrl in i[1]:
                     command = f'you-get {imageUrl} --skip-existing-file-size-check --output-dir "{saveImagesFolderPath}" -O "{i[1].index(imageUrl)+1}" -c {self.cookiesPath}'
                     # command = f'you-get {imageUrl} --output-dir "{saveImagesFolderPath}" -c {self.cookiesPath}'
-                    thread_it(os.system, command)
+                    thread_it(os.system, command,daemon=False)
                     time.sleep(0.1)
                     # thread_it(run_cmd_print_tips, command, f"标题为：{generateTitle} 的图片下载完成")
                     # proc = subprocess.Popen(
