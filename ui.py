@@ -71,7 +71,7 @@ class WinGUI(Tk):
         return frame
 
     def __tk_button_beginButton(self, parent):
-        btn = Button(parent, text="开始下载", takefocus=False, )
+        btn = Button(parent, text="开始下载", takefocus=False)
         btn.place(x=20, y=20, width=960, height=100)
         return btn
 
@@ -102,7 +102,8 @@ class Win(WinGUI):
         self.ctl.init(self)
 
     def __event_bind(self):
-        self.tk_button_beginButton.bind('<Button-1>', self.ctl.startDownloading)
+        self.tk_button_beginButton.config(command=self.ctl.startDownloading)
+        # self.tk_button_beginButton.bind('<Button-1>', self.ctl.startDownloading)
         self.tk_table_sheet.bind('<Delete>', self.ctl.multiSelectDelete)
         kb.add_hotkey('Ctrl + C', lambda: threading.Thread(target=self.ctl.manageCopy, daemon=True).start())
         # kb.add_hotkey('Ctrl + C', self.ctl.manageCopy)

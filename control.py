@@ -247,6 +247,8 @@ class Controller:
     def setWarnningWindowTop(self):
         a = 1
         print("输入已阻止")
+        self.ui.tk_button_beginButton.configure(state=DISABLED)
+        self.ui.tk_table_sheet.configure(selectmode='none')
         kb.remove_all_hotkeys()
 
         while not win32gui.FindWindow(None, "错误"):
@@ -254,8 +256,8 @@ class Controller:
         else:
             print("找到错误窗口")
             hwnd = win32gui.FindWindow(None, "错误")
-        # 以下的目标是使弹出的错误窗口置顶，并一直保持在顶层且保持为焦点窗口。
-        # 达到窗口保持在嘴上层，并且由于窗口一直处于焦点状态，实现不关闭窗口用户就无法进行下一步行为的效果
+        # 目标是弹出窗口后用户不能做出任何操作直到关闭窗口。并且该窗口一直保持置顶。
+        # 因此窗口需要一直处于焦点状态
         while win32gui.IsWindow(hwnd):
             if not win32gui.IsWindowVisible(hwnd):
                 # 若窗口不可见（如表现为窗口被最小化到任务栏，窗口被程序主动隐藏，窗口被其他窗口覆盖（不在最上层
@@ -268,18 +270,15 @@ class Controller:
                 print('错误次数', f'{a}')
                 a += 1
 
-            # 以下提示win32con没有SC_TOPMOST属性
-            # win32gui.PostMessage(hwnd, win32con.WM_SYSCOMMAND, win32con.SC_RESTORE, 0)
-            # win32gui.PostMessage(hwnd, win32con.WM_SYSCOMMAND, win32con.SC_MOVE, 0)
-            # win32gui.PostMessage(hwnd, win32con.WM_SYSCOMMAND, win32con.SC_TOPMOST, 0)
-            # 以下提示SetWindowPos没有SWP_NOACTIVATE属性
-            # win32gui.SetWindowPos(hwnd, win32con.HWND_TOPMOST, 0, 0, 0, 0, win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
+            # win32gui.BringWindowToTop(hwnd)
 
-            # win32gui.SetWindowPos(hwnd, win32con.HWND_TOPMOST, 0, 0, 0, 0,
-            #                       win32con.SWP_NOMOVE | win32con.SWP_NOACTIVATE | win32con.SWP_NOOWNERZORDER | win32con.SWP_SHOWWINDOW | win32con.SWP_NOSIZE)
+            # 以下提示SetWindowPos没有SWP_NOACTIVATE属性
+            # win32gui.SetWindowPos(hwnd, win32con.HWND_TOPMOST, 0, 0, 0, 0,win32con.SWP_NOMOVE | win32con.SWP_NOACTIVATE | win32con.SWP_NOOWNERZORDER | win32con.SWP_SHOWWINDOW | win32con.SWP_NOSIZE)
             time.sleep(0.05)
 
         print("窗口已关闭")
+        self.ui.tk_table_sheet.configure(selectmode='extended')
+        self.ui.tk_button_beginButton.configure(state=NORMAL)
         kb.add_hotkey('Ctrl + C', self.manageCopy)
 
         # while True:
@@ -297,7 +296,7 @@ class Controller:
         #         break
 
     # 开始下载
-    def startDownloading(self, evt):
+    def startDownloading(self):
         kb.remove_all_hotkeys()
         # treeveiw没有state属性
         # self.ui.tk_table_sheet.configure(state=DISABLED)
@@ -309,8 +308,7 @@ class Controller:
         if not allLinksList:
             thread_it(win32api.MessageBox, 0, "表中无数据，请先添加数据", '错误', win32con.MB_ICONWARNING)
             thread_it(self.setWarnningWindowTop)
-            self.ui.tk_button_beginButton.configure(state=NORMAL)
-            self.ui.tk_table_sheet.configure(selectmode='extended')
+
             return
             # treeveiw没有state属性
         '''
@@ -411,12 +409,11 @@ class Controller:
 
         # treeveiw没有state属性
         # self.ui.tk_frame_sheet.configure(state=NORMAL)
-        self.ui.tk_button_beginButton.configure(state=NORMAL)
-        self.ui.tk_table_sheet.configure(selectmode='extended')
+
         # 此处还有问题，需要确认所有线程都执行完毕后再重新设置剪贴板监听
         kb.add_hotkey('Ctrl + C', lambda: threading.Thread(target=self.manageCopy, daemon=True).start())
-        # kb.add_hotkey('Ctrl + C', self.manageCopy)
-        # 开始下载   下载完成后，调用win32api.MessageBox方法弹出提示框
+        self.ui.tk_button_beginButton.configure(state=NORMAL)
+        self.ui.tk_table_sheet.configure(selectmode='extended')
         time.sleep(0.05)
 
     # 获取到剪贴板内容改变后，做出相应的操作
