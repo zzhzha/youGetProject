@@ -99,12 +99,17 @@ class Controller:
         self.rootPath = os.path.dirname(os.path.abspath(__file__))
         self.videoPath: str = self.rootPath + '\\Videos'  #保存所有视频的文件夹
         self.articlePath = self.rootPath + '\\Articles'
+        self.cookiesConfigIniFile = '\\config.ini'
         self.VideoInfoConfirmPattern = re.compile("<script>window\.__INITIAL_STATE__=(\{.*?});\(function")
 
         if not os.path.exists(self.videoPath):
             os.makedirs(self.videoPath)
         if not os.path.exists(self.articlePath):
             os.makedirs(self.articlePath)
+        if not os.path.exists(self.cookiesConfigIniFile):
+            with open(self.cookiesConfigIniFile, 'w', encoding='utf-8') as f:
+                f.write('[Path]\ncookiesPath=')
+
 
     def init(self, ui):
         """
