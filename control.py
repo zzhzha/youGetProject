@@ -129,7 +129,6 @@ class Controller:
         if not os.path.exists(cookiesPath):
             thread_it(win32api.MessageBox, 0, "请先在ini填写cookies路径", '错误', win32con.MB_ICONWARNING,daemon=False)
             sys.exit()
-            # raise FileNotFoundError("请先在ini填写cookies路径")
         return cookiesPath
 
     # 获取需要下载的所有的链接
