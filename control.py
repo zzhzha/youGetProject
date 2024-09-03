@@ -84,7 +84,7 @@ def exactTypeAndLinkSign(url: str) -> [str, str]:
 
 
 
-def thread_it(func, *args, daemon=True):
+def thread_it(func, *args, daemon: bool=True):
     t = threading.Thread(target=func, args=args)
     t.daemon = daemon
     t.start()
