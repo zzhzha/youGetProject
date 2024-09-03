@@ -176,15 +176,19 @@ class Controller:
 
     # 设置剪贴板多选删除操作
     def multiSelectDelete(self, event):
-        selected_items = self.ui.tk_table_sheet.selection()  # 获取所有选中的项的ID
-        for item in selected_items:
-            if item in self.ui.tk_table_sheet.get_children():  # 检查项是否存在
-                self.ui.tk_table_sheet.delete(item)
-        # for item in self.ui.tk_table_sheet.selection():
-        #     self.ui.tk_table_sheet.delete(item)
         """
         多选删除
         """
+        selected_items = self.ui.tk_table_sheet.selection()  # 获取所有选中的项的ID
+        for i in self.ui.tk_table_sheet.get_children():
+            for j in selected_items:
+                if j == i:
+                    self.ui.tk_table_sheet.delete(i)
+                else:
+                    if j in self.ui.tk_table_sheet.get_children(i):
+                        self.ui.tk_table_sheet.delete(j)
+
+
 
 
     def setWarnningWindowTop(self):
