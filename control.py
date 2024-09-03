@@ -188,9 +188,6 @@ class Controller:
                     if j in self.ui.tk_table_sheet.get_children(i):
                         self.ui.tk_table_sheet.delete(j)
 
-
-
-
     def setWarnningWindowTop(self):
         a = 1
         print("输入已阻止")
