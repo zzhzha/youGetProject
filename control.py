@@ -96,6 +96,16 @@ class Controller:
     ui: Win
 
     def __init__(self):
+        pass
+
+
+
+    def init(self, ui):
+        """
+        得到UI实例，对组件进行初始化配置
+        """
+        self.ui = ui
+        self.s = requests.Session()
         self.rootPath = os.path.dirname(os.path.abspath(__file__))
         self.videoPath: str = self.rootPath + '\\Videos'  #保存所有视频的文件夹
         self.articlePath = self.rootPath + '\\Articles'
@@ -109,14 +119,6 @@ class Controller:
         if not os.path.exists(self.cookiesConfigIniFile):
             with open(self.cookiesConfigIniFile, 'w', encoding='utf-8') as f:
                 f.write('[Path]\ncookiesPath=')
-
-
-    def init(self, ui):
-        """
-        得到UI实例，对组件进行初始化配置
-        """
-        self.ui = ui
-        self.s = requests.Session()
         self.cookiesPath = self.getCookiesPath()
         self.ui.protocol("WM_DELETE_WINDOW", self.closeAction)
 
@@ -124,7 +126,7 @@ class Controller:
     # 获取cookies路径
     def getCookiesPath(self):
         cf = configparser.ConfigParser()
-        cf.read('config.ini', encoding='utf-8')
+        cf.read(self.cookiesConfigIniFile, encoding='utf-8')
         cookiesPath = cf.get('Path', 'cookiesPath')
         if not os.path.exists(cookiesPath):
             thread_it(win32api.MessageBox, 0, "请先在ini填写cookies路径", '错误', win32con.MB_ICONWARNING,daemon=False)
