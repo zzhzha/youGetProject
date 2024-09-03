@@ -10,6 +10,7 @@ import win32clipboard
 from tkinter import *
 from tkinter import messagebox
 import keyboard as kb
+import sys
 import requests
 from bs4 import BeautifulSoup
 import os
@@ -122,7 +123,8 @@ class Controller:
         cookiesPath = cf.get('Path', 'cookiesPath')
         if not os.path.exists(cookiesPath):
             thread_it(win32api.MessageBox, 0, "请先在ini填写cookies路径", '错误', win32con.MB_ICONWARNING,daemon=False)
-            exit()
+            sys.exit()
+            # raise FileNotFoundError("请先在ini填写cookies路径")
         return cookiesPath
 
     # 获取需要下载的所有的链接
