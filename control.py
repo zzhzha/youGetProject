@@ -96,17 +96,7 @@ class Controller:
     ui: Win
 
     def __init__(self):
-        pass
-
-
-
-    def init(self, ui):
-        """
-        得到UI实例，对组件进行初始化配置
-        """
-        self.ui = ui
-        self.s = requests.Session()
-        self.rootPath = os.path.dirname(os.path.abspath(__file__))
+        self.rootPath = os.getcwd()
         self.videoPath: str = self.rootPath + '\\Videos'  #保存所有视频的文件夹
         self.articlePath = self.rootPath + '\\Articles'
         self.cookiesConfigIniFile = self.rootPath+'\\config.ini'
@@ -119,6 +109,14 @@ class Controller:
         if not os.path.exists(self.cookiesConfigIniFile):
             with open(self.cookiesConfigIniFile, 'w', encoding='utf-8') as f:
                 f.write('[Path]\ncookiesPath=')
+
+
+    def init(self, ui):
+        """
+        得到UI实例，对组件进行初始化配置
+        """
+        self.ui = ui
+        self.s = requests.Session()
         self.cookiesPath = self.getCookiesPath()
         self.ui.protocol("WM_DELETE_WINDOW", self.closeAction)
 
@@ -463,9 +461,6 @@ class Controller:
     def closeAction(self):
         if messagebox.askokcancel("Quit", "你确认要退出?"):
             self.ui.destroy()
-
-        # self.ui.monitorState = False
-        # win32clipboard.CloseClipboard()
 
         self.ui.quit()
 
