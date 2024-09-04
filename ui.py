@@ -83,7 +83,7 @@ class WinGUI(Tk):
 
     def __tk_table_sheet(self, parent):
         # 表头字段 表头宽度
-        columns = {"标题": 575, "BV号（av号）/分p号": 383}
+        columns = {"标题": 575, "BV号/分p号": 383}
         tk_table = Treeview(parent, show="headings", columns=list(columns), )
         for text, width in columns.items():  # 批量设置列属性
             tk_table.heading(text, text=text, anchor='center')
