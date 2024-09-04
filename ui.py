@@ -15,7 +15,8 @@ class WinGUI(Tk):
         self.tk_table_sheet = self.__tk_table_sheet(self.tk_frame_sheet)
 
     def __win(self):
-        self.title("Tkinter布局助手")
+        self.title("批量下载b站视频文件和专栏图片")
+        self.iconbitmap("icon.ico")
         # 设置窗口大小、居中
         width = 1000
         height = 600
