@@ -16,6 +16,8 @@ from bs4 import BeautifulSoup
 import os
 from pathvalidate import *
 import configparser
+from subprocess import run
+
 
 """
 
@@ -263,7 +265,8 @@ class Controller:
 
                     print(f"开始下载：{generateTitle}")
                     command = f'you-get --skip-existing-file-size-check -o "{saveVideoFolderPath}" -O "{generateTitle}" {videoUrl} -c {self.cookiesPath}'
-                    thread_it(os.system, command, daemon=False)
+                    thread_it(lambda arg:run(arg, shell=True), command, daemon=False)
+
                 else:
                     # 多p视频
                     subtitlePnumberList = i[1]
@@ -279,7 +282,7 @@ class Controller:
 
                         print(f"开始下载{generateTitle}下的副标题为{subtitle}的视频")
                         command = f'you-get --skip-existing-file-size-check -o "{saveVideoFolderPath}" -O "{subtitle}" {videoUrl} -c {self.cookiesPath}'
-                        thread_it(os.system, command, daemon=False)
+                        thread_it(lambda arg:run(arg, shell=True), command, daemon=False)
 
             else:
                 saveImagesFolderPath = os.path.join(self.articlePath, generateTitle)
@@ -288,7 +291,7 @@ class Controller:
                 print(f"开始下载{generateTitle}专栏下的图片")
                 for imageUrl in i[1]:
                     command = f'you-get {imageUrl} --skip-existing-file-size-check --output-dir "{saveImagesFolderPath}" -O "{i[1].index(imageUrl) + 1}" -c {self.cookiesPath}'
-                    thread_it(os.system, command, daemon=False)
+                    thread_it(lambda arg:run(arg, shell=True), command, daemon=False)
                     time.sleep(0.1)
 
         kb.add_hotkey('Ctrl + C', lambda: threading.Thread(target=self.manageCopy, daemon=True).start())
