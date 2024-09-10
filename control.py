@@ -51,8 +51,6 @@ import configparser
 """
 
 
-
-
 def getHeaders(refererUrl='www.bilibili.com'):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
@@ -83,12 +81,10 @@ def exactTypeAndLinkSign(url: str) -> [str, str]:
     return ['', 'None']
 
 
-
-def thread_it(func, *args, daemon: bool=True):
+def thread_it(func, *args, daemon: bool = True):
     t = threading.Thread(target=func, args=args)
     t.daemon = daemon
     t.start()
-
 
 
 class Controller:
@@ -99,7 +95,7 @@ class Controller:
         self.rootPath = os.getcwd()
         self.videoPath: str = self.rootPath + '\\Videos'  #保存所有视频的文件夹
         self.articlePath = self.rootPath + '\\Articles'
-        self.cookiesConfigIniFile = self.rootPath+'\\config.ini'
+        self.cookiesConfigIniFile = self.rootPath + '\\config.ini'
         self.VideoInfoConfirmPattern = re.compile("<script>window\.__INITIAL_STATE__=(\{.*?});\(function")
 
         if not os.path.exists(self.videoPath):
@@ -110,7 +106,6 @@ class Controller:
             with open(self.cookiesConfigIniFile, 'w', encoding='utf-8') as f:
                 f.write('[Path]\ncookiesPath=')
 
-
     def init(self, ui):
         """
         得到UI实例，对组件进行初始化配置
@@ -120,14 +115,13 @@ class Controller:
         self.cookiesPath = self.getCookiesPath()
         self.ui.protocol("WM_DELETE_WINDOW", self.closeAction)
 
-
     # 获取cookies路径
     def getCookiesPath(self):
         cf = configparser.ConfigParser()
         cf.read(self.cookiesConfigIniFile, encoding='utf-8')
         cookiesPath = cf.get('Path', 'cookiesPath')
         if not os.path.exists(cookiesPath):
-            thread_it(win32api.MessageBox, 0, "请先在ini填写cookies路径", '错误', win32con.MB_ICONWARNING,daemon=False)
+            thread_it(win32api.MessageBox, 0, "请先在ini填写cookies路径", '错误', win32con.MB_ICONWARNING, daemon=False)
             sys.exit()
         return cookiesPath
 
@@ -270,6 +264,22 @@ class Controller:
                     print(f"开始下载：{generateTitle}")
                     command = f'you-get --skip-existing-file-size-check -o "{saveVideoFolderPath}" -O "{generateTitle}" {videoUrl} -c {self.cookiesPath}'
                     thread_it(os.system, command, daemon=False)
+                else:
+                    # 多p视频
+                    subtitlePnumberList = i[1]
+                    for n in subtitlePnumberList:
+                        subtitle, Pnumber = sanitize_filename(n[0]), n[1]  #对副标题进行处理，去除特殊字符
+                        #多p视频文件格式：总标题(PX.分p标题).mp4
+                        videoPath = os.path.join(saveVideoFolderPath, f'{subtitle}.mp4')
+                        if os.path.exists(videoPath):
+                            # 视频已存在，跳过
+                            print(f"{subtitle}.mp4已存在，跳过")
+                            continue
+                        videoUrl = f'https://www.bilibili.com/video/{BVnumber}?p={Pnumber[1:]}'
+
+                        print(f"开始下载{generateTitle}下的副标题为{subtitle}的视频")
+                        command = f'you-get --skip-existing-file-size-check -o "{saveVideoFolderPath}" -O "{subtitle}" {videoUrl} -c {self.cookiesPath}'
+                        thread_it(os.system, command, daemon=False)
 
             else:
                 saveImagesFolderPath = os.path.join(self.articlePath, generateTitle)
@@ -280,7 +290,6 @@ class Controller:
                     command = f'you-get {imageUrl} --skip-existing-file-size-check --output-dir "{saveImagesFolderPath}" -O "{i[1].index(imageUrl) + 1}" -c {self.cookiesPath}'
                     thread_it(os.system, command, daemon=False)
                     time.sleep(0.1)
-
 
         kb.add_hotkey('Ctrl + C', lambda: threading.Thread(target=self.manageCopy, daemon=True).start())
         self.ui.tk_button_beginButton.configure(state=NORMAL)
@@ -427,7 +436,6 @@ class Controller:
                         else:
                             imagesUrlList.append('https:' + initImagesUrl)
 
-
             return title, imagesUrlList
 
     def addVideoItem(self, result, linkSign):
@@ -457,10 +465,8 @@ class Controller:
         for imgUrl in imgUrlList:
             self.ui.tk_table_sheet.insert(fatherNode, END, open=True, text='', values=(' ', imgUrl))
 
-
     def closeAction(self):
         if messagebox.askokcancel("Quit", "你确认要退出?"):
             self.ui.destroy()
 
         self.ui.quit()
-
