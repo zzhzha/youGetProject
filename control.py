@@ -257,7 +257,7 @@ class Controller:
 
                 if len(i) == 1:
                     # 单个视频
-                    videoPath = os.path.join(saveVideoFolderPath, f'{generateTitle}')
+                    videoPath = os.path.join(saveVideoFolderPath, f'{generateTitle}.mp4')
                     print(videoPath)
                     # 以视频标题为文件夹名，创建视频保存的文件夹
                     if os.path.exists(videoPath):
