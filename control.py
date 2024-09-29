@@ -95,7 +95,7 @@ class Controller:
 
     def __init__(self):
         self.rootPath = os.getcwd()
-        self.videoPath: str = self.rootPath + '\\Videos'  #保存所有视频的文件夹
+        self.videoPath: str = self.rootPath + '\\Videos'
         self.articlePath = self.rootPath + '\\Articles'
         self.cookiesConfigIniFile = self.rootPath + '\\config.ini'
         self.VideoInfoConfirmPattern = re.compile("<script>window\.__INITIAL_STATE__=(\{.*?});\(function")
