@@ -94,7 +94,8 @@ class Controller:
     ui: Win
 
     def __init__(self):
-        self.rootPath = os.getcwd()
+        # self.rootPath = os.getcwd()
+        self.rootPath = os.path.dirname(os.path.realpath(__file__))
         self.videoPath: str = self.rootPath + '\\Videos'
         self.articlePath = self.rootPath + '\\Articles'
         self.cookiesConfigIniFile = self.rootPath + '\\config.ini'
