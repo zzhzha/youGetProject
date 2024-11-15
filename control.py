@@ -95,7 +95,11 @@ class Controller:
 
     def __init__(self):
         # self.rootPath = os.getcwd()
+        # 打包时采用如下根路径
+        self.rootPath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+        # 直接运行py程序时改用如下路径
         self.rootPath = os.path.dirname(os.path.realpath(__file__))
+        print(self.rootPath)
         self.videoPath: str = self.rootPath + '\\Videos'
         self.articlePath = self.rootPath + '\\Articles'
         self.cookiesConfigIniFile = self.rootPath + '\\config.ini'
