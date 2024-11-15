@@ -99,7 +99,6 @@ class Controller:
         self.rootPath = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
         # 直接运行py程序时改用如下路径
         self.rootPath = os.path.dirname(os.path.realpath(__file__))
-        print(self.rootPath)
         self.videoPath: str = self.rootPath + '\\Videos'
         self.articlePath = self.rootPath + '\\Articles'
         self.cookiesConfigIniFile = self.rootPath + '\\config.ini'
